@@ -56,8 +56,6 @@ Item {
     signal addSubtitleTrack
     signal addAudioTrack
     signal newWindowRequested
-    signal workspaceRequested
-    signal currentVideoWorkspaceRequested
     signal saveSessionRequested
 
     height: metrics.titleBarHeight
@@ -144,15 +142,6 @@ Item {
             text: qsTr("New Window")
             shortcut: "Ctrl+N"
             onTriggered: root.newWindowRequested()
-        }
-        CineMenuItem {
-            text: qsTr("Video Workspace")
-            onTriggered: root.workspaceRequested()
-        }
-        CineMenuItem {
-            text: qsTr("Open Current in Workspace")
-            enabled: root.player && root.player.currentPath.length > 0
-            onTriggered: root.currentVideoWorkspaceRequested()
         }
         CineMenuItem {
             text: qsTr("Playlist")

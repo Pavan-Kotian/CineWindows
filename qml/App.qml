@@ -30,7 +30,6 @@ ApplicationWindow {
     id: window
     property rect startupScreenGeometry: Qt.rect(0, 0, 1200, 800)
     property var diagnostics
-    property var workspace
     readonly property bool hasSavedSize: SettingsManager.initialSize.width >= 320
         && SettingsManager.initialSize.height >= 240
     readonly property int defaultWidth: 1200
@@ -1740,11 +1739,6 @@ ApplicationWindow {
             onShowShortcuts: shortcutsDialog.open()
             onShowAbout: aboutDialog.open()
             onNewWindowRequested: SettingsManager.launchNewWindow()
-            onWorkspaceRequested: if (window.workspace) window.workspace.open([])
-            onCurrentVideoWorkspaceRequested: {
-                if (window.workspace && window.workspace.openCurrent(player.currentPath, player.position, player.pause))
-                    player.pause = true;
-            }
             onCloseRequested: window.close()
             onToggleMaximizeRequested: window.toggleMaximize()
             onMinimizeWindowRequested: window.minimizeWindow()

@@ -150,18 +150,6 @@ if ($temporarySourceExe) {
 }
 
 $windeployqt = Find-WindeployQt
-$adsDll = Get-ChildItem -Path @(
-    (Join-Path $buildPath "x64/bin/$Configuration/*qtadvanceddocking-qt6*.dll"),
-    (Join-Path $buildPath "x64/bin/*qtadvanceddocking-qt6*.dll")
-) -File -ErrorAction SilentlyContinue | Select-Object -First 1
-if (-not $adsDll) {
-    throw "Qt Advanced Docking System DLL was not found under $buildPath/x64/bin."
-}
-Copy-Item -LiteralPath $adsDll.FullName -Destination $stagePath -Force
-$adsLicenseDir = Join-Path $stagePath "licenses/Qt-Advanced-Docking-System"
-New-Item -ItemType Directory -Path $adsLicenseDir -Force | Out-Null
-Copy-Item -LiteralPath (Join-Path $repoRoot "third_party/Qt-Advanced-Docking-System/LICENSE") -Destination $adsLicenseDir
-Copy-Item -LiteralPath (Join-Path $repoRoot "third_party/Qt-Advanced-Docking-System/gnu-lgpl-v2.1.md") -Destination $adsLicenseDir
 if (-not $windeployqt) {
     throw "windeployqt.exe was not found. Pass -QtBin or set QT_ROOT_DIR/Qt6_DIR."
 }
@@ -378,8 +366,8 @@ foreach ($archivePath in @($portableZip, $mediaZip)) {
             throw "Release ZIP is empty: $archivePath"
         }
         $requiredEntries = if ($archivePath -eq $portableZip) {
-            @('CineWindows.exe', 'Qt6Widgets.dll', 'Qt6QuickWidgets.dll',
-              'libqtadvanceddocking-qt6.dll', 'libMpvQt.dll', 'libmpv-2.dll',
+                        @('CineWindows.exe', 'Qt6Widgets.dll', 'Qt6QuickWidgets.dll',
+                            'libMpvQt.dll', 'libmpv-2.dll',
               'platforms/qwindows.dll', 'qml/QtQuick/Controls/qtquickcontrols2plugin.dll')
         } else {
             @('yt-dlp.exe', 'ffmpeg.exe', 'ffprobe.exe')

@@ -85,14 +85,11 @@ mkdir -p "${APPDIR}/usr/bin"
 mkdir -p "${APPDIR}/usr/share/applications"
 mkdir -p "${APPDIR}/usr/share/icons/hicolor/scalable/apps"
 mkdir -p "${APPDIR}/usr/share/icons/hicolor/256x256/apps"
-mkdir -p "${APPDIR}/usr/share/licenses/${APP_ID}/Qt-Advanced-Docking-System"
 
 cp "${EXEC_PATH}" "${APPDIR}/usr/bin/"
 cp "${DESKTOP_FILE}" "${APPDIR}/usr/share/applications/${APP_ID}.desktop"
 cp "resources/icons/apps/CineWindows.svg" "${APPDIR}/usr/share/icons/hicolor/scalable/apps/${APP_ID}.svg"
 cp "resources/icons/apps/CineWindows.png" "${APPDIR}/usr/share/icons/hicolor/256x256/apps/${APP_ID}.png"
-cp third_party/Qt-Advanced-Docking-System/LICENSE "${APPDIR}/usr/share/licenses/${APP_ID}/Qt-Advanced-Docking-System/"
-cp third_party/Qt-Advanced-Docking-System/gnu-lgpl-v2.1.md "${APPDIR}/usr/share/licenses/${APP_ID}/Qt-Advanced-Docking-System/"
 
 # linuxdeploy-plugin-qt cannot discover QML imports that were compiled into the
 # executable unless it is explicitly given the source QML directory. Without
@@ -151,10 +148,6 @@ if ! find "${APPDIR}" -type f -name 'libmpv.so*' -print -quit | grep -q .; then
 fi
 
 echo "==> Creating AppImage..."
-if ! find "${APPDIR}" -type f -name 'libqtadvanceddocking-qt6.so*' -print -quit | grep -q .; then
-    echo "ERROR: Qt Advanced Docking System was not deployed into the AppDir."
-    exit 1
-fi
 export LDAI_OUTPUT="${APP_NAME}-x86_64.AppImage"
 ./linuxdeploy --appdir "${APPDIR}" --output appimage
 

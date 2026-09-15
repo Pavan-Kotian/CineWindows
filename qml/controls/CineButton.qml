@@ -63,7 +63,6 @@ AbstractButton {
 
     /* ---- Window controls ---- */
     property int windowControlRole: CineButton.NoWindowControl
-    property bool squareWindowControl: false
     property bool tooltipBelow: false
 
     /* ---- State ---- */
@@ -136,9 +135,9 @@ AbstractButton {
         anchors.fill: parent
         anchors.leftMargin: root._isDialog ? 0 : 0
         anchors.rightMargin: root._isDialog ? 0 : 0
-          radius: root._isWindowCtrl ? (root.squareWindowControl ? Theme.shapeSmall : width / 2)
-              : root._isClose ? width / 2
+        radius: root._isClose ? width / 2
               : root._isPill ? height / 2
+              : root._isWindowCtrl ? width / 2
               : root._isDialog ? Theme.shapeSmall
               : root._isText ? Theme.shapeSmall
               : Theme.shapeMedium

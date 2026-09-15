@@ -22,7 +22,6 @@
 #include <QObject>
 #include <QPointer>
 #include <QRect>
-#include <QString>
 #include <QWindow>
 #include <QtQmlIntegration/qqmlintegration.h>
 
@@ -30,12 +29,15 @@ class QScreen;
 
 /**
  * @class WindowCornerPreference
- * @brief Manages native frame effects and client-side window shaping.
+ * @brief Manages the rounded-corner preference for a native QWindow on Windows.
  *
  * @details
- * Applies DWM corner, dark-mode, and backdrop preferences on Windows. For
- * client-side decorations on other platforms it applies a rounded window mask.
- * Native state is refreshed when the platform surface, size, or window state changes.
+ * Applies the DWM window-corner preference (DWMWCP_ROUND / DWMWCP_DONOTROUND)
+ * via DwmSetWindowAttribute and re-applies it when the platform surface is
+ * (re)created. Installs an event filter on the target window to react to
+ * QPlatformSurfaceEvent.
+ *
+ * The corner preference is a no-op on non-Windows platforms.
  */
 class WindowCornerPreference : public QObject
 {
@@ -45,13 +47,6 @@ class WindowCornerPreference : public QObject
     Q_PROPERTY(QWindow* targetWindow READ targetWindow WRITE setTargetWindow NOTIFY targetWindowChanged)
     /** @brief Whether window corners should be rounded. */
     Q_PROPERTY(bool rounded READ rounded WRITE setRounded NOTIFY roundedChanged)
-    Q_PROPERTY(int cornerRadius READ cornerRadius WRITE setCornerRadius NOTIFY cornerRadiusChanged)
-    Q_PROPERTY(bool clientSideDecorated READ clientSideDecorated WRITE setClientSideDecorated NOTIFY clientSideDecoratedChanged)
-    Q_PROPERTY(bool darkMode READ darkMode WRITE setDarkMode NOTIFY darkModeChanged)
-    Q_PROPERTY(bool backdropEnabled READ backdropEnabled WRITE setBackdropEnabled NOTIFY backdropEnabledChanged)
-    Q_PROPERTY(bool backdropActive READ backdropActive NOTIFY backdropActiveChanged)
-    Q_PROPERTY(bool clientSideDecorationsRecommended READ clientSideDecorationsRecommended CONSTANT)
-    Q_PROPERTY(QString decorationStyle READ decorationStyle CONSTANT)
     Q_PROPERTY(QRect availableGeometry READ availableGeometry NOTIFY availableGeometryChanged)
 
 public:
@@ -75,17 +70,6 @@ public:
     /** @brief Sets whether window corners should be rounded. @param rounded True to round, false for sharp. */
     void setRounded(bool rounded);
 
-    int cornerRadius() const;
-    void setCornerRadius(int radius);
-    bool clientSideDecorated() const;
-    void setClientSideDecorated(bool decorated);
-    bool darkMode() const;
-    void setDarkMode(bool darkMode);
-    bool backdropEnabled() const;
-    void setBackdropEnabled(bool enabled);
-    bool backdropActive() const;
-    bool clientSideDecorationsRecommended() const;
-    QString decorationStyle() const;
     QRect availableGeometry() const;
 
 Q_SIGNALS:
@@ -93,11 +77,6 @@ Q_SIGNALS:
     void targetWindowChanged();
     /** @brief Emitted when the rounded-corner preference changes. */
     void roundedChanged();
-    void cornerRadiusChanged();
-    void clientSideDecoratedChanged();
-    void darkModeChanged();
-    void backdropEnabledChanged();
-    void backdropActiveChanged();
     void availableGeometryChanged();
 
 protected:
@@ -110,9 +89,8 @@ protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
 private:
-    /** @brief Applies native backdrop, corner, and client-side mask preferences. */
+    /** @brief Applies the DWM corner-preference attribute on the target window. */
     void applyPreference();
-    void setBackdropActive(bool active);
     void trackScreen(QScreen* screen);
 
     QPointer<QWindow> m_targetWindow;             ///< The tracked native window.
@@ -120,9 +98,4 @@ private:
     QMetaObject::Connection m_screenChangedConnection;
     QMetaObject::Connection m_screenGeometryConnection;
     bool m_rounded = true;                        ///< Whether rounded corners are currently enabled.
-    int m_cornerRadius{12};
-    bool m_clientSideDecorated{false};
-    bool m_darkMode{true};
-    bool m_backdropEnabled{true};
-    bool m_backdropActive{false};
 };

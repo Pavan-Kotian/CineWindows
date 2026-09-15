@@ -30,8 +30,6 @@ Item {
     property var player
     property var updateService
     property bool hubVisible: false
-    property bool clientSideDecorated: true
-    property string decorationStyle: "generic"
     /// Whether the Open menu is currently open
     readonly property bool openMenuOpen: openMenu.visible
     /// Whether the main menu is currently open
@@ -346,13 +344,11 @@ Item {
         anchors.fill: parent
         z: -1
         TapHandler {
-            enabled: root.clientSideDecorated
             onTapped: if (tapCount === 2)
                 root.toggleMaximizeRequested()
             gesturePolicy: TapHandler.DragThreshold
         }
         DragHandler {
-            enabled: root.clientSideDecorated
             target: null
             onActiveChanged: if (active && root.Window.window)
                 root.Window.window.startSystemMove()
@@ -365,7 +361,7 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: root.metrics.spacingMd
         anchors.verticalCenter: parent.verticalCenter
-        spacing: root.decorationStyle === "kde" ? root.metrics.spacingXs : root.metrics.spacingSm
+        spacing: root.metrics.spacingSm
 
         CineButton {
             id: menuButton
@@ -382,13 +378,8 @@ Item {
         CineButton {
             id: minimizeButton
             objectName: "minimizeButton"
-            visible: root.clientSideDecorated
             styleVariant: "windowCtrl"
             metrics: root.metrics
-            buttonSize: root.decorationStyle === "kde"
-                ? root.metrics.controlStandard
-                : root.metrics.controlCompact
-            squareWindowControl: root.decorationStyle === "kde"
             windowControlRole: CineButton.MinimizeControl
             windowControlTint: root.hubVisible ? Theme.text : Theme.headerIcon
             btnTooltip: qsTr("Minimize")
@@ -399,13 +390,8 @@ Item {
         CineButton {
             id: maximizeButton
             objectName: "maximizeButton"
-            visible: root.clientSideDecorated
             styleVariant: "windowCtrl"
             metrics: root.metrics
-            buttonSize: root.decorationStyle === "kde"
-                ? root.metrics.controlStandard
-                : root.metrics.controlCompact
-            squareWindowControl: root.decorationStyle === "kde"
             windowControlRole: root.Window.window
                 && (root.Window.window.visibility === Window.Maximized
                     || root.Window.window.visibility === Window.FullScreen)
@@ -422,13 +408,8 @@ Item {
         CineButton {
             id: closeButton
             objectName: "closeButton"
-            visible: root.clientSideDecorated
             styleVariant: "close"
             metrics: root.metrics
-            buttonSize: root.decorationStyle === "kde"
-                ? root.metrics.controlStandard
-                : root.metrics.controlCompact
-            squareWindowControl: root.decorationStyle === "kde"
             windowControlRole: CineButton.CloseControl
             windowControlTint: closeButton.hovered ? "white"
                 : root.hubVisible ? Theme.text : Theme.headerIcon

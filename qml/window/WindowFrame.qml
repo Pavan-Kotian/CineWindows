@@ -12,9 +12,11 @@
  *
  * Project: CineWindows
  * Author:  Ritesh Pandit
- * Last modified: 2026-09-11
+ * Last modified: 2026-09-10
  * Modified by: Ritesh Pandit
  */
+
+
 
 import QtQuick
 import QtQuick.Window
@@ -24,25 +26,21 @@ Rectangle {
     id: root
 
     required property var targetWindow
-    property bool clientSideDecorated: false
     property bool compact: false
-    property bool backdropActive: false
-    readonly property bool restored: !!targetWindow
+    readonly property bool rounded: !!targetWindow
         && targetWindow.visibility === Window.Windowed
-    readonly property bool rounded: clientSideDecorated && restored
     readonly property int restoredRadius: Style.Theme.windowRadius
     readonly property int compactRadius: Style.Theme.windowCompactRadius
 
-    color: backdropActive
-        ? Style.Theme.windowBackdropTint
-        : Style.Theme.background
+    color: Style.Theme.background
     radius: rounded ? (compact ? compactRadius : restoredRadius) : 0
     border.width: rounded ? Style.Theme.windowBorderWidth : 0
     border.color: Style.Theme.windowBorderColor
     clip: true
 
+    // Keep the frame visible above full-size content before removing App's PiP-only border.
     Rectangle {
-        objectName: "windowSurfaceForegroundBorder"
+        objectName: "windowFrameForegroundBorder"
         anchors.fill: parent
         z: 100000
         visible: root.rounded

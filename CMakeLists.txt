@@ -259,7 +259,7 @@ set(CINEWINDOWS_QML_FILES
     qml/style/ViewportMetrics.qml
     qml/utils/TimeUtils.qml
     qml/window/ResizeHandles.qml
-    qml/window/WindowSurface.qml
+    qml/window/WindowFrame.qml
     qml/workspace/DockedVideo.qml
 )
 

@@ -1400,14 +1400,6 @@ ResponsivePopup {
                     checked: SettingsManager.reduceMotion
                     onToggled: value => SettingsManager.reduceMotion = value
                 }
-                Sep { visible: Qt.platform.os === "windows" }
-                SwitchRow {
-                    visible: Qt.platform.os === "windows"
-                    title: qsTr("Windows Mica Backdrop")
-                    subtitle: qsTr("Use the system backdrop when supported")
-                    checked: SettingsManager.systemBackdrop
-                    onToggled: value => SettingsManager.systemBackdrop = value
-                }
             }
 
             Text {

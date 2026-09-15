@@ -112,7 +112,6 @@ void WindowCornerPreference::trackScreen(QScreen* screen)
         m_screenGeometryConnection = connect(screen, &QScreen::availableGeometryChanged,
                                               this, &WindowCornerPreference::availableGeometryChanged);
     }
-    Q_EMIT availableGeometryChanged();
 }
 
 bool WindowCornerPreference::rounded() const

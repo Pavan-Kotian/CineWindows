@@ -84,6 +84,17 @@ QtObject {
     readonly property int windowCompactRadius: 14
     /// Subtle border width for restored top-level windows
     readonly property int windowBorderWidth: 1
+    /// Interactive resize border for frameless top-level windows
+    readonly property int windowResizeBorderWidth: 6
+    /// Minimum usable dimensions for top-level player windows
+    readonly property int windowMinimumWidth: 320
+    readonly property int windowMinimumHeight: 240
+    readonly property int windowCompactMinimumWidth: 240
+    readonly property int windowCompactMinimumHeight: 180
+    /// Initial and picture-in-picture sizing relative to the active work area
+    readonly property real windowInitialScreenFraction: 0.8
+    readonly property real pictureInPictureScreenFraction: 0.28
+    readonly property real pictureInPictureFallbackAspectRatio: 16 / 9
     /// Subtle border color for restored top-level windows
     readonly property color windowBorderColor: isLight ? "#24000000" : "#38ffffff"
     /// Floating popup corner radius

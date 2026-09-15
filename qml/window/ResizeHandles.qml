@@ -20,6 +20,7 @@
 
 import QtQuick
 import QtQuick.Window
+import "../style" as Style
 
 Item {
     id: root
@@ -27,7 +28,7 @@ Item {
     /// The window that this resize handles control
     property var targetWindow
     /// Thickness of the interactive resize border in pixels
-    readonly property int borderSize: Math.max(4, Style.Theme.windowBorderWidth)
+    readonly property int borderSize: Style.Theme.windowResizeBorderWidth
 
     visible: targetWindow && targetWindow.visibility === Window.Windowed
 

@@ -30,12 +30,16 @@ ApplicationWindow {
     id: window
     property rect startupScreenGeometry: Qt.rect(0, 0, 1, 1)
     property var diagnostics
-    readonly property int contentMinimumWidth: Math.min(320, Math.max(1, startupScreenGeometry.width))
-    readonly property int contentMinimumHeight: Math.min(240, Math.max(1, startupScreenGeometry.height))
+    readonly property int contentMinimumWidth: Math.min(
+        Theme.windowMinimumWidth, Math.max(1, startupScreenGeometry.width))
+    readonly property int contentMinimumHeight: Math.min(
+        Theme.windowMinimumHeight, Math.max(1, startupScreenGeometry.height))
     readonly property bool hasSavedSize: SettingsManager.initialSize.width >= contentMinimumWidth
         && SettingsManager.initialSize.height >= contentMinimumHeight
-    readonly property int defaultWidth: Math.round(startupScreenGeometry.width * 0.8)
-    readonly property int defaultHeight: Math.round(startupScreenGeometry.height * 0.8)
+    readonly property int defaultWidth: Math.round(
+        startupScreenGeometry.width * Theme.windowInitialScreenFraction)
+    readonly property int defaultHeight: Math.round(
+        startupScreenGeometry.height * Theme.windowInitialScreenFraction)
     readonly property int initialWidth: Math.min(
         Math.max(contentMinimumWidth, hasSavedSize ? SettingsManager.initialSize.width : defaultWidth),
         Math.max(1, startupScreenGeometry.width))
@@ -47,8 +51,9 @@ ApplicationWindow {
     height: initialHeight
     x: startupScreenGeometry.x + Math.round((startupScreenGeometry.width - initialWidth) / 2)
     y: startupScreenGeometry.y + Math.round((startupScreenGeometry.height - initialHeight) / 2)
-    minimumWidth: contentMinimumWidth
-    minimumHeight: Math.min(compactMode > 0 ? 180 : contentMinimumHeight,
+    minimumWidth: Math.min(compactMode > 0 ? Theme.windowCompactMinimumWidth : contentMinimumWidth,
+                          Math.max(1, startupScreenGeometry.width))
+    minimumHeight: Math.min(compactMode > 0 ? Theme.windowCompactMinimumHeight : contentMinimumHeight,
                            Math.max(1, startupScreenGeometry.height))
     visible: false
     color: "transparent"
@@ -70,6 +75,8 @@ ApplicationWindow {
     // state and crashed the app, and (b) stop the geometry handlers below from
     // saving intermediate transition values as the "normal" geometry.
     property bool stateTransitioning: false ///< Prevents re-entrant fullscreen/maximize toggles during transitions
+    property int transitionTargetVisibility: -1
+    property var transitionCallback: null
     property bool wasMaximizedBeforeFullscreen: false ///< Remembers maximized state before entering fullscreen
     readonly property bool isFullscreen: window.visibility === Window.FullScreen
     property bool ignoreVolumeOsd: true
@@ -210,28 +217,28 @@ ApplicationWindow {
         }
     }
 
-    /// Fires the pending state transition callback and clears the transitioning flag.
-    Timer {
-        id: stateTransitionTimer
-        interval: 200
-        repeat: false
-        property var callback: null
-        onTriggered: {
-            var pendingCallback = callback;
-            callback = null;
-            if (pendingCallback)
-                pendingCallback();
-            window.stateTransitioning = false;
-        }
+    /// Begins a fullscreen/maximize transition guard until the native state is observed.
+    function beginWindowStateTransition(targetVisibility, callback) {
+        stateTransitioning = true;
+        transitionTargetVisibility = targetVisibility;
+        transitionCallback = callback || null;
     }
 
-    /// Begins a fullscreen/maximize transition guard and fires the callback after the transition timer expires.
-    /// @param callback Optional function to execute after the transition timer completes.
-    function beginWindowStateTransition(callback) {
-        stateTransitioning = true;
-        stateTransitionTimer.stop();
-        stateTransitionTimer.callback = callback || null;
-        stateTransitionTimer.start();
+    function completeWindowStateTransition(visibility) {
+        if (!stateTransitioning || transitionTargetVisibility < 0
+                || visibility !== transitionTargetVisibility)
+            return;
+        const targetVisibility = transitionTargetVisibility;
+        const callback = transitionCallback;
+        transitionTargetVisibility = -1;
+        transitionCallback = null;
+        Qt.callLater(function () {
+            if (!window.stateTransitioning || window.visibility !== targetVisibility)
+                return;
+            if (callback)
+                callback();
+            window.stateTransitioning = false;
+        });
     }
 
     /// Toggles the window between fullscreen and windowed/maximized state, preserving geometry.
@@ -240,10 +247,10 @@ ApplicationWindow {
             return;
         if (window.isFullscreen) {
             if (wasMaximizedBeforeFullscreen) {
-                beginWindowStateTransition(null);
+                beginWindowStateTransition(Window.Maximized, null);
                 window.visibility = Window.Maximized;
             } else {
-                beginWindowStateTransition(function () {
+                beginWindowStateTransition(Window.Windowed, function () {
                     window.restoreNormalGeometry();
                 });
                 window.visibility = Window.Windowed;
@@ -255,7 +262,7 @@ ApplicationWindow {
                 wasMaximizedBeforeFullscreen = false;
                 captureNormalGeometry();
             }
-            beginWindowStateTransition(null);
+            beginWindowStateTransition(Window.FullScreen, null);
             window.visibility = Window.FullScreen;
         }
     }
@@ -269,14 +276,14 @@ ApplicationWindow {
             return;
         }
         if (window.visibility === Window.Maximized) {
-            beginWindowStateTransition(function () {
+            beginWindowStateTransition(Window.Windowed, function () {
                 window.restoreNormalGeometry();
             });
             window.visibility = Window.Windowed;
         } else {
             if (!window.isFullscreen)
                 captureNormalGeometry();
-            beginWindowStateTransition(null);
+            beginWindowStateTransition(Window.Maximized, null);
             window.visibility = Window.Maximized;
         }
     }
@@ -526,43 +533,96 @@ ApplicationWindow {
         onMediaChosen: function (paths, append) { controller.openPaths(paths, !append); }
     }
 
-    function enterCompactMode(mode) {
-        if (!mediaActive || mode !== 2)
-            return;
-        window.leaveMediaHub();
-        if (compactMode === 0 && visibility === Window.Windowed)
-            captureNormalGeometry();
-        if (isFullscreen || visibility === Window.Maximized)
-            visibility = Window.Windowed;
+    function pictureInPictureGeometry(bounds) {
+        const minimumWidth = Math.min(Theme.windowCompactMinimumWidth, Math.max(1, bounds.width));
+        const minimumHeight = Math.min(Theme.windowCompactMinimumHeight, Math.max(1, bounds.height));
+        const margin = Math.min(
+            viewportMetrics.spacingLg,
+            Math.max(0, Math.floor((bounds.width - minimumWidth) / 2)),
+            Math.max(0, Math.floor((bounds.height - minimumHeight) / 2)));
+        const maximumWidth = Math.max(1, bounds.width - margin * 2);
+        const maximumHeight = Math.max(1, bounds.height - margin * 2);
+        const aspectRatio = player.videoAspectRatio > 0
+            ? player.videoAspectRatio : Theme.pictureInPictureFallbackAspectRatio;
+        let compactWidth;
+        let compactHeight;
+        if (aspectRatio >= 1) {
+            compactWidth = Math.max(
+                minimumWidth,
+                Math.round(minimumHeight * aspectRatio),
+                Math.round(bounds.width * Theme.pictureInPictureScreenFraction));
+            compactHeight = Math.round(compactWidth / aspectRatio);
+        } else {
+            compactHeight = Math.max(
+                minimumHeight,
+                Math.round(minimumWidth / aspectRatio),
+                Math.round(bounds.height * Theme.pictureInPictureScreenFraction));
+            compactWidth = Math.round(compactHeight * aspectRatio);
+        }
+        if (compactHeight > maximumHeight) {
+            compactHeight = maximumHeight;
+            compactWidth = Math.round(compactHeight * aspectRatio);
+        }
+        compactWidth = Math.max(minimumWidth, Math.min(compactWidth, maximumWidth));
+        compactHeight = Math.max(minimumHeight, Math.min(compactHeight, maximumHeight));
+        return correctedWindowGeometry(
+            bounds.x + bounds.width - compactWidth - margin,
+            bounds.y + bounds.height - compactHeight - margin,
+            compactWidth, compactHeight, bounds);
+    }
+
+    function activateCompactMode(mode) {
         compactMode = mode;
         pipTransparent = false;
         opacity = 1.0;
         pipControlsVisible = true;
         pipSubtitleTrack = subtitleTracks.selectedTrack > 0 ? subtitleTracks.selectedTrack : 0;
-        const bounds = availableScreenGeometry();
-        const compactGeometry = correctedWindowGeometry(
-            bounds.x + bounds.width - 384 - 24,
-            bounds.y + bounds.height - 216 - 24,
-            384, 216, bounds);
-        width = compactGeometry.width;
-        height = compactGeometry.height;
-        x = compactGeometry.x;
-        y = compactGeometry.y;
-        raise();
-        requestActivate();
-        Qt.callLater(schedulePipControlsHide);
+        Qt.callLater(function () {
+            window.show();
+            const compactGeometry = window.pictureInPictureGeometry(window.availableScreenGeometry());
+            window.width = compactGeometry.width;
+            window.height = compactGeometry.height;
+            window.x = compactGeometry.x;
+            window.y = compactGeometry.y;
+            window.raise();
+            window.requestActivate();
+            window.schedulePipControlsHide();
+        });
+    }
+
+    function enterCompactMode(mode) {
+        if (!mediaActive || mode !== 2 || stateTransitioning)
+            return;
+        window.leaveMediaHub();
+        if (compactMode === 0 && visibility === Window.Windowed)
+            captureNormalGeometry();
+        if (isFullscreen || visibility === Window.Maximized) {
+            beginWindowStateTransition(Window.Windowed, function () {
+                window.activateCompactMode(mode);
+            });
+            visibility = Window.Windowed;
+            return;
+        }
+        activateCompactMode(mode);
     }
 
     function exitCompactMode() {
         if (compactMode === 0)
             return;
         pipControlsHideTimer.stop();
+        stateTransitioning = true;
+        transitionTargetVisibility = -1;
+        transitionCallback = null;
         compactMode = 0;
         pipTransparent = false;
         pipControlsVisible = true;
         opacity = 1.0;
-        restoreNormalGeometry();
-        showChrome(2200);
+        Qt.callLater(function () {
+            window.show();
+            window.restoreNormalGeometry();
+            window.stateTransitioning = false;
+            window.showChrome(2200);
+        });
     }
 
     function pipControlsPinned() {
@@ -1284,6 +1344,7 @@ ApplicationWindow {
     /// Shows chrome and clears cursor hide when returning from minimized/hidden states.
     /// @param visibility The new Window visibility state.
     onVisibilityChanged: function (visibility) {
+        completeWindowStateTransition(visibility);
         if (visibility !== Window.Minimized && visibility !== Window.Hidden) {
             if (window.opacity < 1.0) {
                 fadeAnimation.start();

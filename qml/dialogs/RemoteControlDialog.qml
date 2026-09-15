@@ -285,19 +285,37 @@ Controls.ResponsivePopup {
                 spacing: 8
                 visible: !!root.remoteService && root.remoteService.enabled
                 Text {
+                    Layout.fillWidth: true
                     text: qsTr("Open this address on your other device")
                     color: Theme.text
                     font.pixelSize: Theme.fontSizeSmall
                     font.bold: true
+                    wrapMode: Text.WordWrap
                 }
                 TextField {
                     id: addressField
+                    objectName: "remoteAddressField"
                     Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    Layout.preferredHeight: 44
                     readOnly: true
                     text: root.remoteService ? root.remoteService.remoteUrl : ""
                     placeholderText: qsTr("Enable remote access to get the address")
                     color: Theme.text
+                    placeholderTextColor: Theme.mutedText
+                    selectionColor: Theme.glassActive
+                    selectedTextColor: Theme.text
+                    font.pixelSize: Theme.fontSizeSmall
+                    leftPadding: 12
+                    rightPadding: 12
                     selectByMouse: true
+                    Accessible.name: qsTr("Companion remote address")
+                    background: Rectangle {
+                        radius: Theme.radius
+                        color: Theme.cardStrong
+                        border.color: addressField.activeFocus ? Theme.focusRing : Theme.separator
+                        border.width: addressField.activeFocus ? Theme.focusRingWidth : 1
+                    }
                 }
                 RowLayout {
                     Layout.fillWidth: true

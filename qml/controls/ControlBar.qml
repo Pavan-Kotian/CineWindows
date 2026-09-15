@@ -366,7 +366,8 @@ Item {
                 visible: !root.compactControls
                 metrics: root.metrics
                 playerControl: true
-                iconName: root.subtitlesEnabled ? "cine-subtitles-symbolic" : "cine-subtitles-off-symbolic"
+                iconName: "cine-subtitles-symbolic"
+                filledIcon: root.subtitlesEnabled
                 btnText: qsTr("Subtitles")
                 /// Emits subtitlesRequested to open the subtitles menu
                 onClicked: root.subtitlesRequested(subtitlesButton)

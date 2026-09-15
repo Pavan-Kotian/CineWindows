@@ -224,10 +224,12 @@ ResponsivePopup {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 2
-                                Text { text: qsTr("10-band equalizer"); color: Theme.text; font.pixelSize: Theme.fontSizeBody; font.bold: true }
-                                Text { text: qsTr("Adjust frequency gain from low bass to high treble"); color: Theme.mutedText; font.pixelSize: Theme.fontSizeCaption }
+                                Text { Layout.fillWidth: true; text: qsTr("10-band equalizer"); color: Theme.text; font.pixelSize: Theme.fontSizeBody; font.bold: true; wrapMode: Text.WordWrap }
+                                Text { Layout.fillWidth: true; text: qsTr("Gain (dB)"); color: Theme.mutedText; font.pixelSize: Theme.fontSizeCaption }
                             }
                             CineSwitch {
+                                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                                enabled: !!root.advanced
                                 checked: root.advanced ? root.advanced.equalizerEnabled : false
                                 Accessible.name: qsTr("Enable equalizer")
                                 onToggled: if (root.advanced) root.advanced.equalizerEnabled = checked
@@ -238,6 +240,7 @@ ResponsivePopup {
                             id: equalizerGrid
                             Layout.fillWidth: true
                             columns: root.equalizerColumns
+                            uniformCellWidths: true
                             rowSpacing: 12
                             columnSpacing: 6
                             Repeater {
@@ -246,22 +249,30 @@ ResponsivePopup {
                                     id: band
                                     required property int index
                                     required property var modelData
-                                    Layout.preferredWidth: Math.max(42,
-                                        (equalizerGrid.width - (root.equalizerColumns - 1) * equalizerGrid.columnSpacing)
-                                        / root.equalizerColumns)
-                                    Layout.preferredHeight: 176
-                                    spacing: 4
-                                    Text { Layout.alignment: Qt.AlignHCenter; text: (root.advanced ? Number(root.advanced.equalizerBands[band.index]).toFixed(1) : "0.0"); color: Theme.accent; font.pixelSize: Theme.fontSizeTiny; font.bold: true }
+                                    readonly property real gain: root.advanced ? Number(root.advanced.equalizerBands[band.index]) || 0 : 0
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 36
+                                    Layout.preferredWidth: 52
+                                    Layout.preferredHeight: 208
+                                    spacing: 6
+                                    Text { Layout.alignment: Qt.AlignHCenter; text: (band.gain > 0 ? "+" : "") + band.gain.toFixed(1); color: band.gain === 0 ? Theme.mutedText : Theme.accent; font.pixelSize: Theme.fontSizeCaption; font.bold: true }
                                     CineRangeSlider {
+                                        objectName: "equalizerBand" + band.index
                                         Layout.alignment: Qt.AlignHCenter
                                         Layout.fillHeight: true
+                                        Layout.minimumHeight: 112
+                                        Layout.preferredHeight: 144
+                                        enabled: !!root.advanced
                                         orientation: Qt.Vertical
                                         from: -12; to: 12; stepSize: 0.5
-                                        value: root.advanced ? root.advanced.equalizerBands[band.index] : 0
+                                        value: band.gain
+                                        markerValue: 0
+                                        fillFromMarker: true
+                                        showTicks: false
                                         Accessible.name: qsTr("%1 Hz gain").arg(band.modelData.label)
                                         onMoved: if (root.advanced) root.advanced.setEqualizerBand(band.index, value)
                                     }
-                                    Text { Layout.alignment: Qt.AlignHCenter; text: band.modelData.label; color: Theme.text; font.pixelSize: Theme.fontSizeTiny; font.bold: true }
+                                    Text { Layout.alignment: Qt.AlignHCenter; text: band.modelData.label; color: Theme.text; font.pixelSize: Theme.fontSizeCaption; font.bold: true }
                                     Text { Layout.alignment: Qt.AlignHCenter; text: "Hz"; color: Theme.mutedText; font.pixelSize: Theme.fontSizeTiny }
                                 }
                             }
@@ -352,11 +363,33 @@ ResponsivePopup {
                                 }
                             }
                         }
-                        RowLayout {
+                        ColumnLayout {
                             Layout.fillWidth: true
                             Text { text: qsTr("HDR target peak"); color: Theme.mutedText; font.pixelSize: Theme.fontSizeCaption }
-                            CineRangeSlider { Layout.fillWidth: true; from: 100; to: 1000; stepSize: 10; value: root.advanced ? root.advanced.targetPeak : 203; Accessible.name: qsTr("HDR target peak"); onMoved: if (root.advanced) root.advanced.targetPeak = value }
-                            Text { text: (root.advanced ? root.advanced.targetPeak : 203) + " nits"; color: Theme.text; font.pixelSize: Theme.fontSizeCaption; font.bold: true; Layout.preferredWidth: 72 }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 12
+                                CineRangeSlider {
+                                    objectName: "hdrPeakSlider"
+                                    Layout.fillWidth: true
+                                    enabled: !!root.advanced
+                                    from: 100
+                                    to: 1000
+                                    stepSize: 10
+                                    showTicks: false
+                                    value: root.advanced ? root.advanced.targetPeak : 203
+                                    Accessible.name: qsTr("HDR target peak (nits)")
+                                    onMoved: if (root.advanced) root.advanced.targetPeak = value
+                                }
+                                Text {
+                                    text: (root.advanced ? root.advanced.targetPeak : 203) + " nits"
+                                    color: Theme.text
+                                    font.pixelSize: Theme.fontSizeCaption
+                                    font.bold: true
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                }
+                            }
                         }
                     }
                 }

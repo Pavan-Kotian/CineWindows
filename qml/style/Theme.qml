@@ -133,17 +133,19 @@ QtObject {
     /// Seek bar handle color
     readonly property color seekHandle: "#ffffff"
 
-    // Range slider (beui-style bar thumb)
+    // Range slider
     /// Range slider track background
-    readonly property color sliderTrack: seekTrack
+    readonly property color sliderTrack: isLight ? "#818896" : "#646a78"
     /// Range slider fill from the start edge to the thumb
-    readonly property color sliderFill: isLight ? "#2617181b" : "#26f5f5f7"
+    readonly property color sliderFill: isLight ? Qt.darker(accent, 1.25) : accent
     /// Range slider tick dot color
-    readonly property color sliderTick: isLight ? "#4017181b" : "#40f5f5f7"
+    readonly property color sliderTick: isLight ? "#646b78" : "#9297a3"
     /// Range slider thumb color
-    readonly property color sliderThumb: text
+    readonly property color sliderThumb: iconOnDark
+    readonly property color sliderThumbBorder: isLight ? Qt.darker(accent, 1.4) : accent
+    readonly property color sliderHalo: Qt.alpha(accent, 0.16)
     /// Range slider reference marker line color
-    readonly property color sliderMarker: "#6effffff"
+    readonly property color sliderMarker: text
 
     // Cards (options / preferences rows)
     /// Default card background

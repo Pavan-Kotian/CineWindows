@@ -20,6 +20,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import CineWindows
 
 Popup {
@@ -45,15 +46,18 @@ Popup {
     /// Records the close timestamp when the popup is dismissed
     onClosed: closedAt = Date.now()
 
-    width: Math.max(160, Math.round(180 * metrics.visualScale))
-    height: metrics.controlCompact + metrics.spacingSm + metrics.spacingMd
+    width: Math.min(Math.max(220, Math.round(248 * metrics.visualScale)),
+        parent && parent.Window.window ? Math.max(0, parent.Window.window.width - 2 * edgeMargin) : 248)
+    height: metrics.controlStandard + 3 * metrics.spacingSm
+    focus: true
     x: _anchoredX()
     y: _anchoredY()
     leftPadding: metrics.spacingSm + metrics.spacingXs
     rightPadding: metrics.spacingSm + metrics.spacingXs
     topPadding: metrics.spacingSm
-    bottomPadding: metrics.spacingMd
+    bottomPadding: metrics.spacingSm + metrics.spacingXs
     transformOrigin: Item.Bottom
+    onOpened: volumeSlider.forceActiveFocus(Qt.PopupFocusReason)
 
     /// Returns the volume label text for display
     /// @returns "Muted", "0%", or the current volume percentage string
@@ -188,46 +192,51 @@ Popup {
         }
     }
 
-    contentItem: Row {
-        width: root.availableWidth
-        height: root.metrics.controlCompact
-        spacing: root.metrics.spacingSm + root.metrics.spacingXs
+    contentItem: RowLayout {
+        spacing: root.metrics.spacingSm
 
         CineButton {
             id: muteButton
-            anchors.verticalCenter: parent.verticalCenter
+            Layout.alignment: Qt.AlignVCenter
             styleVariant: "icon"
             metrics: root.metrics
             iconName: root.player && root.player.mute ? "cine-volume-mute-symbolic" : "cine-volume-max-symbolic"
-            btnTooltip: qsTr("Mute")
+            btnTooltip: root.player && root.player.mute ? qsTr("Unmute") : qsTr("Mute")
+            enabled: !!root.controller
             onClicked: if (root.controller)
                 root.controller.toggleMute()
         }
 
-        Item {
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.max(0, parent.width - muteButton.width - parent.spacing)
-            height: root.metrics.controlCompact
-
-            CineRangeSlider {
-                id: volumeSlider
-                anchors.fill: parent
-                focusPolicy: Qt.NoFocus
-                Accessible.name: qsTr("Volume")
-                from: 0
-                to: 200
-                stepSize: 1
-                markerValue: 100
-                value: root.player ? root.player.volume : 100
-                /// Sets the player volume and unmutes if muted and volume > 0
-                onMoved: {
-                    if (!root.player)
-                        return;
-                    root.player.volume = value;
-                    if (value > 0 && root.player.mute)
-                        root.player.mute = false;
-                }
+        CineRangeSlider {
+            id: volumeSlider
+            objectName: "volumeSlider"
+            Layout.fillWidth: true
+            Layout.minimumWidth: 64
+            enabled: !!root.player
+            Accessible.name: qsTr("Volume")
+            from: 0
+            to: 200
+            stepSize: 1
+            markerValue: 100
+            showTicks: false
+            value: root.player ? root.player.volume : 100
+            onMoved: {
+                if (!root.player)
+                    return;
+                root.player.volume = value;
+                if (value > 0 && root.player.mute)
+                    root.player.mute = false;
             }
+        }
+
+        Text {
+            objectName: "volumeValue"
+            Layout.preferredWidth: Math.round(48 * root.metrics.visualScale)
+            text: root.volumeLabel()
+            color: Theme.text
+            font.pixelSize: root.metrics.fontCaption
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
         }
     }
 }

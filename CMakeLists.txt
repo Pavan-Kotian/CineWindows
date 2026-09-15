@@ -99,7 +99,7 @@ set(QTLOGGER_DEBUG_OUTPUT OFF CACHE BOOL "Disable QtLogger internal diagnostics"
 set(QTLOGGER_NO_THREAD OFF CACHE BOOL "Enable QtLogger thread-safe logging support" FORCE)
 set(QTLOGGER_NETWORK OFF CACHE BOOL "Disable QtLogger remote logging sinks" FORCE)
 set(QTLOGGER_JOURNAL OFF CACHE BOOL "Disable the optional systemd journal sink" FORCE)
-add_subdirectory(third_party/qtlogger/src/qtlogger EXCLUDE_FROM_ALL)
+add_subdirectory(third_party/qtlogger/src/qtlogger EXCLUDE_FROM_ALL SYSTEM)
 
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/Qt-Advanced-Docking-System/CMakeLists.txt")
     message(FATAL_ERROR "Qt Advanced Docking System is missing. Run: git submodule update --init --recursive")

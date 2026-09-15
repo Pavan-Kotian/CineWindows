@@ -241,6 +241,7 @@ FocusScope {
                     playerControl: true
                     iconTint: Theme.iconOnDark
                     iconName: "cine-subtitles-symbolic"
+                    filledIcon: subtitleTracks.selectedTrack > 0
                     btnTooltip: qsTr("Subtitles")
                     onClicked: subtitleMenu.openAbove(subtitlesButton, root)
                 }

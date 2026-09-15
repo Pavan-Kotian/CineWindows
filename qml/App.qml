@@ -2165,7 +2165,7 @@ ApplicationWindow {
                     model: [
                         { icon: player.mute ? "cine-volume-mute-symbolic" : "cine-volume-max-symbolic", label: player.mute ? qsTr("Unmute") : qsTr("Mute"), active: player.mute, action: function () { controller.toggleMute(); } },
                         { icon: "cine-transparency-symbolic", label: window.pipTransparent ? qsTr("Full opacity") : qsTr("70% opacity"), active: window.pipTransparent, action: function () { window.togglePipTransparency(); } },
-                        { icon: subtitleTracks.selectedTrack > 0 ? "cine-subtitles-symbolic" : "cine-subtitles-off-symbolic", label: subtitleTracks.selectedTrack > 0 ? qsTr("Hide captions") : qsTr("Show captions"), active: subtitleTracks.selectedTrack > 0, action: function () { window.togglePipCaptions(); } }
+                        { icon: "cine-subtitles-symbolic", label: subtitleTracks.selectedTrack > 0 ? qsTr("Hide captions") : qsTr("Show captions"), active: subtitleTracks.selectedTrack > 0, action: function () { window.togglePipCaptions(); } }
                     ]
 
                     delegate: CineButton {

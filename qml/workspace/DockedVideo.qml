@@ -201,12 +201,14 @@ FocusScope {
                 CineButton {
                     playerControl: true
                     sizeRole: CineButton.StandardSize
+                    iconTint: Theme.iconOnDark
                     iconName: root.requestedPause ? "cine-playback-start-symbolic" : "cine-playback-pause-symbolic"
                     btnTooltip: root.requestedPause ? qsTr("Play") : qsTr("Pause")
                     onClicked: root.setPaused(!root.requestedPause)
                 }
                 CineButton {
                     playerControl: true
+                    iconTint: Theme.iconOnDark
                     iconName: root.requestedMute ? "cine-volume-mute-symbolic" : "cine-volume-max-symbolic"
                     btnTooltip: root.requestedMute ? qsTr("Unmute") : qsTr("Mute")
                     onClicked: root.setMuted(!root.requestedMute)
@@ -237,6 +239,7 @@ FocusScope {
                 CineButton {
                     id: subtitlesButton
                     playerControl: true
+                    iconTint: Theme.iconOnDark
                     iconName: "cine-subtitles-symbolic"
                     btnTooltip: qsTr("Subtitles")
                     onClicked: subtitleMenu.openAbove(subtitlesButton, root)
@@ -244,6 +247,7 @@ FocusScope {
                 CineButton {
                     id: audioButton
                     playerControl: true
+                    iconTint: Theme.iconOnDark
                     iconName: "cine-audio-symbolic"
                     btnTooltip: qsTr("Audio Tracks")
                     onClicked: audioMenu.openAbove(audioButton, root)
@@ -251,6 +255,7 @@ FocusScope {
                 CineButton {
                     id: speedButton
                     playerControl: true
+                    iconTint: Theme.iconOnDark
                     iconName: "cine-options-symbolic"
                     btnTooltip: qsTr("Playback Speed")
                     onClicked: speedMenu.openAbove(speedButton, root)

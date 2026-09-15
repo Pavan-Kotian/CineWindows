@@ -175,6 +175,9 @@ $windeployArgs = @(
     $stageExe
 )
 & $windeployqt @windeployArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Qt runtime deployment failed with exit code $LASTEXITCODE."
+}
 
 # Remove debug/profiler QML tooling (not needed in release)
 foreach ($toolingDir in @("qmltooling", "qml/QtQuick/tooling")) {
@@ -346,7 +349,10 @@ if (Test-Path $portableZip) {
 }
 $sevenZip = Find-OnPath "7z.exe"
 if ($sevenZip) {
-    & $sevenZip a -t7z -mx=9 -mmt=on $portableZip (Join-Path $stagePath "*") | Out-Null
+    & $sevenZip a -tzip -mm=Deflate -mx=9 -mmt=on $portableZip (Join-Path $stagePath "*") | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Portable ZIP creation failed with exit code $LASTEXITCODE."
+    }
 } else {
     Compress-Archive -Path (Join-Path $stagePath "*") -DestinationPath $portableZip -Force
 }
@@ -357,9 +363,35 @@ if (Test-Path $mediaZip) {
     Remove-Item -LiteralPath $mediaZip -Force
 }
 if ($sevenZip) {
-    & $sevenZip a -t7z -mx=9 -mmt=on $mediaZip (Join-Path $mediaStagePath "*") | Out-Null
+    & $sevenZip a -tzip -mm=Deflate -mx=9 -mmt=on $mediaZip (Join-Path $mediaStagePath "*") | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Media tools ZIP creation failed with exit code $LASTEXITCODE."
+    }
 } else {
     Compress-Archive -Path (Join-Path $mediaStagePath "*") -DestinationPath $mediaZip -Force
+}
+
+foreach ($archivePath in @($portableZip, $mediaZip)) {
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($archivePath)
+    try {
+        if ($archive.Entries.Count -eq 0) {
+            throw "Release ZIP is empty: $archivePath"
+        }
+        $requiredEntries = if ($archivePath -eq $portableZip) {
+            @('CineWindows.exe', 'Qt6Widgets.dll', 'Qt6QuickWidgets.dll',
+              'libqtadvanceddocking-qt6.dll', 'libMpvQt.dll', 'libmpv-2.dll',
+              'platforms/qwindows.dll', 'qml/QtQuick/Controls/qtquickcontrols2plugin.dll')
+        } else {
+            @('yt-dlp.exe', 'ffmpeg.exe', 'ffprobe.exe')
+        }
+        foreach ($entry in $requiredEntries) {
+            if (-not $archive.GetEntry($entry)) {
+                throw "Release ZIP is missing ${entry}: $archivePath"
+            }
+        }
+    } finally {
+        $archive.Dispose()
+    }
 }
 
 # NSIS installer (core app only, no media tools)
@@ -370,6 +402,9 @@ if (-not $SkipInstaller) {
         Push-Location (Split-Path -Parent $nsi)
         try {
             & $makensis "/DAPP_VERSION=$version" "/DSTAGE_DIR=$stagePath" "/DOUTPUT_DIR=$artifactPath" $nsi
+            if ($LASTEXITCODE -ne 0) {
+                throw "Windows installer creation failed with exit code $LASTEXITCODE."
+            }
         } finally {
             Pop-Location
         }

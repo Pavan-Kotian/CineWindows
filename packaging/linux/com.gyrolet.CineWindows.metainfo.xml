@@ -34,6 +34,12 @@
   </screenshots>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.0.2" date="2026-09-15">
+      <description>
+        <p>Adds a dockable multi-video workspace, saved YouTube quality preferences, and a unified file, path, and URL picker.</p>
+        <p>Improves sliders, subtitle icons, startup reliability, thumbnail previews, diagnostic exports, and Linux desktop icons.</p>
+      </description>
+    </release>
     <release version="0.0.1" date="2026-09-10">
       <description>
         <p>Initial source-available release.</p>

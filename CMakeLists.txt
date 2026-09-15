@@ -16,7 +16,7 @@
 #
 cmake_minimum_required(VERSION 3.25)
 
-project(CineWindows VERSION 0.0.1 LANGUAGES CXX)
+project(CineWindows VERSION 0.0.2 LANGUAGES CXX)
 
 set(CINEWINDOWS_APP_ID "com.gyrolet.CineWindows")
 set(CINEWINDOWS_DISPLAY_NAME "CineWindows" CACHE STRING "Application display name")

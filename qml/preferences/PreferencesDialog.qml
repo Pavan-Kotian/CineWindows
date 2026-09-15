@@ -196,6 +196,7 @@ ResponsivePopup {
         property alias currentIndex: combo.currentIndex
         // Model role for display text
         property string textRole: ""
+        property string iconName: ""
         // Emitted when selection changes
         signal activated(int index)
 
@@ -208,7 +209,7 @@ ResponsivePopup {
             id: lbl
             objectName: comboRow.objectName.length > 0 ? comboRow.objectName + "Label" : ""
             anchors.left: parent.left
-            anchors.leftMargin: 16
+            anchors.leftMargin: comboRow.iconName.length > 0 ? 48 : 16
             anchors.right: root.compactLayout ? parent.right : combo.left
             anchors.rightMargin: root.compactLayout ? 16 : 12
             anchors.top: root.compactLayout ? parent.top : undefined
@@ -216,6 +217,17 @@ ResponsivePopup {
             anchors.verticalCenter: root.compactLayout ? undefined : parent.verticalCenter
             title: parent.title
             subtitle: parent.subtitle
+        }
+
+        CineIcon {
+            anchors.left: parent.left
+            anchors.leftMargin: 16
+            anchors.verticalCenter: lbl.verticalCenter
+            width: 20
+            height: 20
+            name: comboRow.iconName
+            tint: Theme.iconDefault
+            visible: comboRow.iconName.length > 0
         }
 
         ComboBox {
@@ -228,7 +240,8 @@ ResponsivePopup {
             anchors.verticalCenter: root.compactLayout ? undefined : parent.verticalCenter
             width: 168
             height: 36
-            focusPolicy: Qt.NoFocus
+            focusPolicy: Qt.StrongFocus
+            Accessible.name: comboRow.title
             textRole: parent.textRole
             model: parent.model
             onActivated: parent.activated(currentIndex)
@@ -539,6 +552,25 @@ ResponsivePopup {
                     checked: SettingsManager.hwdec !== "no"
                     // Toggle between auto-safe and disabled
                     onToggled: value => SettingsManager.hwdec = value ? "auto-safe" : "no"
+                }
+                Sep {}
+                ComboRow {
+                    objectName: "youtubeQualityRow"
+                    title: qsTr("YouTube Quality")
+                    iconName: "cine-video-quality-symbolic"
+                    model: SettingsManager.youtubeQualityOptions
+                    textRole: "label"
+                    currentIndex: {
+                        const options = SettingsManager.youtubeQualityOptions;
+                        for (let index = 0; index < options.length; ++index) {
+                            if (options[index].height === SettingsManager.youtubeQuality)
+                                return index;
+                        }
+                        return 0;
+                    }
+                    onActivated: function (index) {
+                        SettingsManager.youtubeQuality = SettingsManager.youtubeQualityOptions[index].height;
+                    }
                 }
                 Sep {}
                 SwitchRow {

@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <QVariantList>
+
 #include <QObject>
 #include <QSize>
 #include <QString>
@@ -61,6 +63,8 @@ class SettingsManager : public QObject
     Q_PROPERTY(bool normalizeVolume READ normalizeVolume WRITE setNormalizeVolume NOTIFY normalizeVolumeChanged)
     /** @brief Hardware-accelerated decoding backend (e.g. "auto-safe", "vaapi", "cuda"). */
     Q_PROPERTY(QString hwdec READ hwdec WRITE setHwdec NOTIFY hwdecChanged)
+    Q_PROPERTY(int youtubeQuality READ youtubeQuality WRITE setYoutubeQuality NOTIFY youtubeQualityChanged)
+    Q_PROPERTY(QVariantList youtubeQualityOptions READ youtubeQualityOptions CONSTANT)
     /** @brief Whether to remember the last playback position per file. */
     Q_PROPERTY(bool saveVideoPosition READ saveVideoPosition WRITE setSaveVideoPosition NOTIFY saveVideoPositionChanged)
     /** @brief Whether to restore the previous session on startup. */
@@ -135,6 +139,10 @@ public:
     bool normalizeVolume() const;
     /** @brief Returns the hardware decoding backend identifier. */
     QString hwdec() const;
+    int youtubeQuality() const;
+    void setYoutubeQuality(int height);
+    QVariantList youtubeQualityOptions() const;
+    QString youtubeFormat() const;
     /** @brief Returns whether video playback position is being saved. */
     bool saveVideoPosition() const;
     /** @brief Returns whether session state is being persisted. */
@@ -279,6 +287,7 @@ Q_SIGNALS:
     void normalizeVolumeChanged();
     /** @brief Emitted when the hardware decoding backend changes. */
     void hwdecChanged();
+    void youtubeQualityChanged();
     /** @brief Emitted when the save-video-position preference changes. */
     void saveVideoPositionChanged();
     /** @brief Emitted when the save-session preference changes. */
@@ -335,6 +344,7 @@ private:
     bool m_openNewWindows{true};                 ///< Whether to open media in a new window.
     bool m_normalizeVolume{false};               ///< Whether volume normalisation is active.
     QString m_hwdec{QStringLiteral("auto-safe")}; ///< Hardware decoding backend identifier.
+    int m_youtubeQuality{0};
     bool m_saveVideoPosition{false};             ///< Whether to remember video playback position.
     bool m_saveSession{false};                   ///< Whether to restore session on startup.
     bool m_thumbnailPreview{true};               ///< Whether to show thumbnail previews.

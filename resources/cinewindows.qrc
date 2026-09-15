@@ -77,6 +77,8 @@
         <file alias="icons/actions/cine-subtitles-symbolic-filled.svg">icons/actions/cine-subtitles-symbolic-filled.svg</file>
         <file alias="icons/actions/cine-transparency-symbolic.svg">icons/actions/cine-transparency-symbolic.svg</file>
         <file alias="icons/actions/cine-transparency-symbolic-filled.svg">icons/actions/cine-transparency-symbolic-filled.svg</file>
+        <file alias="icons/actions/cine-video-quality-symbolic.svg">icons/actions/cine-video-quality-symbolic.svg</file>
+        <file alias="icons/actions/cine-video-quality-symbolic-filled.svg">icons/actions/cine-video-quality-symbolic-filled.svg</file>
         <file alias="icons/actions/cine-video-symbolic.svg">icons/actions/cine-video-symbolic.svg</file>
         <file alias="icons/actions/cine-video-symbolic-filled.svg">icons/actions/cine-video-symbolic-filled.svg</file>
         <file alias="icons/actions/cine-video-x-generic-symbolic.svg">icons/actions/cine-video-x-generic-symbolic.svg</file>

@@ -293,6 +293,8 @@ Q_SIGNALS:
     void userMessage(const QString& message);
 
 private:
+    void applyYoutubeQuality();
+
     /** @brief The active mpv player item that receives playback commands. */
     CineMpvItem* m_player{nullptr};
     /** @brief The playlist model used for track navigation and state. */
@@ -301,6 +303,7 @@ private:
     SettingsManager* m_settings{nullptr};
     /** @brief Tracks the connection to CineMpvItem::fileLoaded for pending-seek logic. */
     QMetaObject::Connection m_fileLoadedConnection;
+    QMetaObject::Connection m_rendererReadyConnection;
     /** @brief Path stored while waiting for fileLoaded, used by openPathAt / playIndexAt. */
     QString m_pendingResumePath;
     /** @brief Seek position stored while waiting for fileLoaded, clamped to [0, duration-1]. */

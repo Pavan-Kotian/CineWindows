@@ -33,6 +33,17 @@
 #include <QtGlobal>
 
 #include <algorithm>
+#include <array>
+
+namespace {
+constexpr std::array YoutubeQualityHeights{0, 2160, 1440, 1080, 720, 480, 360, 240, 144};
+
+int normalizedYoutubeQuality(int height)
+{
+    return std::find(YoutubeQualityHeights.begin(), YoutubeQualityHeights.end(), height)
+        != YoutubeQualityHeights.end() ? height : 0;
+}
+}
 
 /**
  * @brief Constructs the SettingsManager and loads persisted preferences.
@@ -82,6 +93,7 @@ void SettingsManager::load()
     m_openNewWindows = settings.value(QStringLiteral("behavior/openNewWindows"), m_openNewWindows).toBool();
     m_normalizeVolume = settings.value(QStringLiteral("playback/normalizeVolume"), m_normalizeVolume).toBool();
     m_hwdec = settings.value(QStringLiteral("playback/hwdec"), m_hwdec).toString();
+    m_youtubeQuality = normalizedYoutubeQuality(settings.value(QStringLiteral("online/youtubeQuality"), 0).toInt());
     // Migrate legacy d3d11va-copy backend to "no"
     if (m_hwdec == QStringLiteral("d3d11va-copy"))
     {
@@ -149,6 +161,39 @@ QString SettingsManager::hwdec() const
 {
     return m_hwdec;
 }
+int SettingsManager::youtubeQuality() const
+{
+    return m_youtubeQuality;
+}
+
+QVariantList SettingsManager::youtubeQualityOptions() const
+{
+    QVariantList options;
+    for (const int height : YoutubeQualityHeights)
+    {
+        const QString label = height == 0 ? tr("Automatic (Best)")
+            : height == 2160 ? tr("2160p (4K)") : tr("%1p").arg(height);
+        options.append(QVariantMap{{QStringLiteral("height"), height}, {QStringLiteral("label"), label}});
+    }
+    return options;
+}
+
+QString SettingsManager::youtubeFormat() const
+{
+    return m_youtubeQuality == 0 ? QStringLiteral("bestvideo+bestaudio/best")
+        : QStringLiteral("bestvideo[height<=?%1]+bestaudio/best[height<=?%1]").arg(m_youtubeQuality);
+}
+
+void SettingsManager::setYoutubeQuality(int height)
+{
+    height = normalizedYoutubeQuality(height);
+    if (m_youtubeQuality == height)
+        return;
+    m_youtubeQuality = height;
+    saveValue(QStringLiteral("online/youtubeQuality"), height);
+    Q_EMIT youtubeQualityChanged();
+}
+
 bool SettingsManager::saveVideoPosition() const
 {
     return m_saveVideoPosition;
@@ -521,6 +566,7 @@ void SettingsManager::removeLegacyThumbnailScripts()
  */
 void SettingsManager::resetPlaybackSettings()
 {
+    setYoutubeQuality(0);
     setVolume(100);
     setMuted(false);
     setNormalizeVolume(false);

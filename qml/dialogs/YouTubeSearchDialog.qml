@@ -27,6 +27,14 @@ import "../controls" as Controls
 Controls.ResponsivePopup {
     id: root
     property var searchService
+    readonly property string qualityLabel: {
+        const options = SettingsManager.youtubeQualityOptions;
+        for (let index = 0; index < options.length; ++index) {
+            if (options[index].height === SettingsManager.youtubeQuality)
+                return options[index].label;
+        }
+        return "";
+    }
     signal playRequested(string url)
 
     parent: Overlay.overlay
@@ -85,6 +93,23 @@ Controls.ResponsivePopup {
             : "";
     }
 
+    Controls.CineMenu {
+        id: qualityMenu
+        objectName: "youtubeQualityMenu"
+        Instantiator {
+            model: SettingsManager.youtubeQualityOptions
+            delegate: Controls.CineMenuItem {
+                required property var modelData
+                text: modelData.label
+                checkable: true
+                checked: SettingsManager.youtubeQuality === modelData.height
+                onTriggered: SettingsManager.youtubeQuality = modelData.height
+            }
+            onObjectAdded: function (index, object) { qualityMenu.insertItem(index, object); }
+            onObjectRemoved: function (index, object) { qualityMenu.removeItem(object); }
+        }
+    }
+
     contentItem: ScrollView {
         id: bodyScroll
         objectName: "dialogSurface"
@@ -97,11 +122,34 @@ Controls.ResponsivePopup {
             width: bodyScroll.availableWidth
             spacing: 12
 
-            Text {
-                text: qsTr("Search YouTube")
-                color: Theme.text
-                font.pixelSize: 20
-                font.bold: true
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: root.metrics.spacingSm
+                Text {
+                    Layout.fillWidth: true
+                    text: qsTr("Search YouTube")
+                    color: Theme.text
+                    font.pixelSize: 20
+                    font.bold: true
+                    wrapMode: Text.WordWrap
+                }
+                Text {
+                    Layout.maximumWidth: 120
+                    visible: !root.compactLayout
+                    text: root.qualityLabel
+                    color: Theme.mutedText
+                    font.pixelSize: Theme.fontSizeCaption
+                    elide: Text.ElideRight
+                }
+                Controls.CineButton {
+                    id: qualityButton
+                    objectName: "youtubeQualityButton"
+                    metrics: root.metrics
+                    sizeRole: Controls.CineButton.StandardSize
+                    iconName: "cine-video-quality-symbolic"
+                    btnTooltip: qsTr("Preferred YouTube Quality: %1").arg(root.qualityLabel)
+                    onClicked: qualityMenu.openBelow(qualityButton, bodyScroll)
+                }
             }
             GridLayout {
                 objectName: "actionLayout"

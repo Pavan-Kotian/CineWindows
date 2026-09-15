@@ -64,9 +64,13 @@ void PlaybackController::setPlayer(CineMpvItem* player)
     }
     if (m_fileLoadedConnection)
         disconnect(m_fileLoadedConnection);
+    if (m_rendererReadyConnection)
+        disconnect(m_rendererReadyConnection);
     m_player = player;
     if (m_player)
     {
+        m_rendererReadyConnection = connect(m_player, &CineMpvItem::rendererReadyChanged,
+            this, &PlaybackController::applyYoutubeQuality);
         // Wire fileLoaded handler to seek to the pending position after media loads
         m_fileLoadedConnection = connect(m_player, &CineMpvItem::fileLoaded, this, [this] {
             if (!m_player || m_pendingResumePath.isEmpty()
@@ -83,6 +87,7 @@ void PlaybackController::setPlayer(CineMpvItem* player)
             m_pendingResumePosition = 0.0;
         });
     }
+    applyYoutubeQuality();
     Q_EMIT playerChanged();
 }
 
@@ -123,6 +128,8 @@ void PlaybackController::setSettings(SettingsManager* settings)
     m_settings = settings;
     if (m_settings)
     {
+        connect(m_settings, &SettingsManager::youtubeQualityChanged,
+            this, &PlaybackController::applyYoutubeQuality);
         // Realtime: add/remove loudnorm audio filter via mpv af command
         connect(m_settings, &SettingsManager::normalizeVolumeChanged, this, [this]() {
             if (m_player && m_settings)
@@ -180,7 +187,14 @@ void PlaybackController::setSettings(SettingsManager* settings)
             }
         });
     }
+    applyYoutubeQuality();
     Q_EMIT settingsChanged();
+}
+
+void PlaybackController::applyYoutubeQuality()
+{
+    if (m_player && m_settings)
+        m_player->setMpvOption(QStringLiteral("ytdl-format"), m_settings->youtubeFormat());
 }
 
 /**
@@ -242,6 +256,7 @@ void PlaybackController::playIndex(int index)
 
     // Update playlist state and load the media file in mpv
     m_playlist->setCurrentIndex(index);
+    applyYoutubeQuality();
     m_player->loadFile(m_playlist->pathAt(index), QStringLiteral("replace"));
     m_player->setPause(false);
 }
@@ -447,6 +462,8 @@ void PlaybackController::applySettings()
     {
         return;
     }
+
+    applyYoutubeQuality();
 
     // Core playback: volume, mute, hardware decoding
     m_player->setVolume(m_settings->volume());

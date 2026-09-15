@@ -285,8 +285,7 @@ int main(int argc, char* argv[])
             QDir::toNativeSeparators(QStandardPaths::writableLocation(QStandardPaths::CacheLocation)).toLocal8Bit());
 
     QQmlApplicationEngine engine;
-    const QRect startupBounds = startupScreen
-        ? startupScreen->availableGeometry() : QRect(0, 0, 1200, 800);
+    const QRect startupBounds = startupScreen ? startupScreen->availableGeometry() : QRect(0, 0, 1, 1);
     engine.setInitialProperties({{QStringLiteral("startupPaths"), startupPaths},
                                  {QStringLiteral("startupScreenGeometry"), startupBounds},
                                  {QStringLiteral("diagnostics"), QVariant::fromValue(&applicationLog)}});

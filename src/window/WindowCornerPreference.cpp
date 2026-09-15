@@ -95,7 +95,7 @@ QRect WindowCornerPreference::availableGeometry() const
     if (!screen)
         screen = QGuiApplication::primaryScreen();
     if (!screen)
-        return QRect(0, 0, 1200, 800);
+        return QRect(0, 0, 1, 1);
 
     const QRect available = screen->availableGeometry();
     const QMargins margins = m_targetWindow ? m_targetWindow->frameMargins() : QMargins();

@@ -27,13 +27,14 @@ Item {
     /// The window that this resize handles control
     property var targetWindow
     /// Thickness of the interactive resize border in pixels
-    readonly property int borderSize: 6
+    readonly property int borderSize: Math.max(4, Style.Theme.windowBorderWidth)
 
     visible: targetWindow && targetWindow.visibility === Window.Windowed
 
     MouseArea {
         width: root.borderSize
         height: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.left: parent.left
         anchors.top: parent.top
         cursorShape: Qt.SizeFDiagCursor
@@ -42,6 +43,7 @@ Item {
 
     MouseArea {
         height: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.left: parent.left
         anchors.leftMargin: root.borderSize
         anchors.right: parent.right
@@ -54,6 +56,7 @@ Item {
     MouseArea {
         width: root.borderSize
         height: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.right: parent.right
         anchors.top: parent.top
         cursorShape: Qt.SizeBDiagCursor
@@ -62,6 +65,7 @@ Item {
 
     MouseArea {
         width: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.top: parent.top
         anchors.topMargin: root.borderSize
         anchors.bottom: parent.bottom
@@ -74,6 +78,7 @@ Item {
     MouseArea {
         width: root.borderSize
         height: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         cursorShape: Qt.SizeFDiagCursor
@@ -82,6 +87,7 @@ Item {
 
     MouseArea {
         height: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.left: parent.left
         anchors.leftMargin: root.borderSize
         anchors.right: parent.right
@@ -94,6 +100,7 @@ Item {
     MouseArea {
         width: root.borderSize
         height: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         cursorShape: Qt.SizeBDiagCursor
@@ -102,6 +109,7 @@ Item {
 
     MouseArea {
         width: root.borderSize
+        acceptedButtons: Qt.LeftButton
         anchors.top: parent.top
         anchors.topMargin: root.borderSize
         anchors.bottom: parent.bottom

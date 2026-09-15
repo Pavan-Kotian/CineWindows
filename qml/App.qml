@@ -28,25 +28,28 @@ import CineWindows
 
 ApplicationWindow {
     id: window
-    property rect startupScreenGeometry: Qt.rect(0, 0, 1200, 800)
+    property rect startupScreenGeometry: Qt.rect(0, 0, 1, 1)
     property var diagnostics
-    readonly property bool hasSavedSize: SettingsManager.initialSize.width >= 320
-        && SettingsManager.initialSize.height >= 240
-    readonly property int defaultWidth: 1200
-    readonly property int defaultHeight: 800
+    readonly property int contentMinimumWidth: Math.min(320, Math.max(1, startupScreenGeometry.width))
+    readonly property int contentMinimumHeight: Math.min(240, Math.max(1, startupScreenGeometry.height))
+    readonly property bool hasSavedSize: SettingsManager.initialSize.width >= contentMinimumWidth
+        && SettingsManager.initialSize.height >= contentMinimumHeight
+    readonly property int defaultWidth: Math.round(startupScreenGeometry.width * 0.8)
+    readonly property int defaultHeight: Math.round(startupScreenGeometry.height * 0.8)
     readonly property int initialWidth: Math.min(
-        hasSavedSize ? SettingsManager.initialSize.width : defaultWidth,
+        Math.max(contentMinimumWidth, hasSavedSize ? SettingsManager.initialSize.width : defaultWidth),
         Math.max(1, startupScreenGeometry.width))
     readonly property int initialHeight: Math.min(
-        hasSavedSize ? SettingsManager.initialSize.height : defaultHeight,
+        Math.max(contentMinimumHeight, hasSavedSize ? SettingsManager.initialSize.height : defaultHeight),
         Math.max(1, startupScreenGeometry.height))
 
     width: initialWidth
     height: initialHeight
     x: startupScreenGeometry.x + Math.round((startupScreenGeometry.width - initialWidth) / 2)
     y: startupScreenGeometry.y + Math.round((startupScreenGeometry.height - initialHeight) / 2)
-    minimumWidth: 320
-    minimumHeight: compactMode > 0 ? 180 : 240
+    minimumWidth: contentMinimumWidth
+    minimumHeight: Math.min(compactMode > 0 ? 180 : contentMinimumHeight,
+                           Math.max(1, startupScreenGeometry.height))
     visible: false
     color: "transparent"
     title: player.mediaTitle.length > 0

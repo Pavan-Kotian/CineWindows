@@ -40,8 +40,7 @@ StartupShell::StartupShell(const QGuiApplication& app, QScreen* screen)
     QScreen* selectedScreen = screen ? screen : app.primaryScreen();
     if (selectedScreen)
         setScreen(selectedScreen);
-    const QRect available = selectedScreen
-        ? selectedScreen->availableGeometry() : QRect(0, 0, 1200, 800);
+    const QRect available = selectedScreen ? selectedScreen->availableGeometry() : QRect(0, 0, 1, 1);
     const QSize shellSize(std::max(1, (available.width() + 1) / 2),
                           std::max(1, (available.height() * 3 + 2) / 5));
     resize(shellSize);

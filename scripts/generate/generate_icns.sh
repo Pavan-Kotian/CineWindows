@@ -22,7 +22,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd -- "${SCRIPT_DIR}/../.." && pwd -P)"
-ICON_SVG="${1:-${REPO_ROOT}/resources/icons/apps/CineWindows.svg}"
+ICON_SVG="${1:-${REPO_ROOT}/resources/icons/apps/CineWindows-macos.svg}"
 OUTPUT_ICNS="${2:-${REPO_ROOT}/packaging/macos/CineWindows.icns}"
 
 if [[ ! -f "${ICON_SVG}" ]]; then

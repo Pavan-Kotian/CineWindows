@@ -30,6 +30,7 @@ Item {
     property var player
     property var updateService
     property bool hubVisible: false
+    property bool customWindowFrame: false
     /// Whether the Open menu is currently open
     readonly property bool openMenuOpen: openMenu.visible
     /// Whether the main menu is currently open
@@ -323,7 +324,7 @@ Item {
         font.pixelSize: root.metrics.fontBody
         elide: Text.ElideMiddle
         width: Math.min(preferredWidth, availableWidth)
-        visible: !root.hubVisible && width >= root.metrics.iconMd
+        visible: root.customWindowFrame && !root.hubVisible && width >= root.metrics.iconMd
         horizontalAlignment: Text.AlignHCenter
         style: Text.Outline
         styleColor: Theme.headerTitleOutline
@@ -333,11 +334,13 @@ Item {
         anchors.fill: parent
         z: -1
         TapHandler {
+            enabled: root.customWindowFrame
             onTapped: if (tapCount === 2)
                 root.toggleMaximizeRequested()
             gesturePolicy: TapHandler.DragThreshold
         }
         DragHandler {
+            enabled: root.customWindowFrame
             target: null
             onActiveChanged: if (active && root.Window.window)
                 root.Window.window.startSystemMove()
@@ -373,6 +376,7 @@ Item {
             windowControlTint: root.hubVisible ? Theme.text : Theme.headerIcon
             btnTooltip: qsTr("Minimize")
             tooltipBelow: true
+            visible: root.customWindowFrame
             onClicked: root.minimizeWindowRequested()
         }
 
@@ -391,6 +395,7 @@ Item {
                 ? qsTr("Restore")
                 : qsTr("Maximize")
             tooltipBelow: true
+            visible: root.customWindowFrame
             onClicked: root.toggleMaximizeRequested()
         }
 
@@ -404,6 +409,7 @@ Item {
                 : root.hubVisible ? Theme.text : Theme.headerIcon
             btnTooltip: qsTr("Close")
             tooltipBelow: true
+            visible: root.customWindowFrame
             onClicked: root.closeRequested()
         }
     }

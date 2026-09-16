@@ -27,10 +27,11 @@ Item {
 
     /// The window that this resize handles control
     property var targetWindow
+    property bool customFrame: false
     /// Thickness of the interactive resize border in pixels
     readonly property int borderSize: Style.Theme.windowResizeBorderWidth
 
-    visible: targetWindow && targetWindow.visibility === Window.Windowed
+    visible: customFrame && targetWindow && targetWindow.visibility === Window.Windowed
 
     MouseArea {
         width: root.borderSize

@@ -30,6 +30,8 @@ ApplicationWindow {
     id: window
     property rect startupScreenGeometry: Qt.rect(0, 0, 1, 1)
     property var diagnostics
+    property bool customWindowFrame: false
+    readonly property bool useCustomWindowFrame: customWindowFrame || compactMode === 2
     readonly property int contentMinimumWidth: Math.min(
         Theme.windowMinimumWidth, Math.max(1, startupScreenGeometry.width))
     readonly property int contentMinimumHeight: Math.min(
@@ -56,11 +58,13 @@ ApplicationWindow {
     minimumHeight: Math.min(compactMode > 0 ? Theme.windowCompactMinimumHeight : contentMinimumHeight,
                            Math.max(1, startupScreenGeometry.height))
     visible: false
-    color: "transparent"
+    color: useCustomWindowFrame ? "transparent" : Theme.background
     title: player.mediaTitle.length > 0
         ? player.mediaTitle + " - " + Qt.application.displayName
         : Qt.application.displayName
-    flags: Qt.Window | Qt.FramelessWindowHint | (compactMode === 2 ? Qt.WindowStaysOnTopHint : 0)
+    flags: Qt.Window
+        | (useCustomWindowFrame ? Qt.FramelessWindowHint : 0)
+        | (compactMode === 2 ? Qt.WindowStaysOnTopHint : 0)
 
     property int normalWidth: initialWidth ///< Saved width of windowed geometry for restore after fullscreen/maximize
     property int normalHeight: initialHeight ///< Saved height of windowed geometry for restore after fullscreen/maximize
@@ -1323,6 +1327,7 @@ ApplicationWindow {
 
     /// Applies the cheap player settings needed for the first frame.
     Component.onCompleted: {
+        customWindowFrame = SettingsManager.customWindowFrame;
         ensureWindowGeometryVisible();
         controller.applySettings();
         Qt.callLater(runDeferredStartup);
@@ -1401,6 +1406,7 @@ ApplicationWindow {
         id: rootContainer
         anchors.fill: parent
         targetWindow: window
+        customFrame: window.useCustomWindowFrame
         compact: window.compactMode === 2
 
         CineMpvItem {
@@ -1577,8 +1583,6 @@ ApplicationWindow {
             }
 
             onPositionChanged: {
-                window.requestActivate();
-                player.forceActiveFocus();
                 window.showPipControls();
                 window.showChrome(2000);
             }
@@ -1765,6 +1769,7 @@ ApplicationWindow {
             player: player
             updateService: appUpdateService
             hubVisible: window.mediaHubVisible
+            customWindowFrame: window.useCustomWindowFrame
             visible: window.compactMode === 0
             Behavior on opacity {
                 NumberAnimation {
@@ -2411,6 +2416,7 @@ ApplicationWindow {
     ResizeHandles {
         anchors.fill: parent
         targetWindow: window
+        customFrame: window.useCustomWindowFrame
         z: 9999
     }
 }

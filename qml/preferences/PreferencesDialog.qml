@@ -1432,6 +1432,13 @@ ResponsivePopup {
                     checked: SettingsManager.reduceMotion
                     onToggled: value => SettingsManager.reduceMotion = value
                 }
+                Sep {}
+                SwitchRow {
+                    title: qsTr("Custom Window Frame")
+                    subtitle: qsTr("Replace native window controls after restarting CineWindows")
+                    checked: SettingsManager.customWindowFrame
+                    onToggled: value => SettingsManager.customWindowFrame = value
+                }
             }
 
             Text {

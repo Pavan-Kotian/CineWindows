@@ -26,8 +26,9 @@ Rectangle {
     id: root
 
     required property var targetWindow
+    property bool customFrame: false
     property bool compact: false
-    readonly property bool rounded: !!targetWindow
+    readonly property bool rounded: customFrame && !!targetWindow
         && targetWindow.visibility === Window.Windowed
     readonly property int restoredRadius: Style.Theme.windowRadius
     readonly property int compactRadius: Style.Theme.windowCompactRadius
@@ -36,7 +37,7 @@ Rectangle {
     radius: rounded ? (compact ? compactRadius : restoredRadius) : 0
     border.width: rounded ? Style.Theme.windowBorderWidth : 0
     border.color: Style.Theme.windowBorderColor
-    clip: true
+    clip: rounded
 
     // Keep the frame visible above full-size content before removing App's PiP-only border.
     Rectangle {

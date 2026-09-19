@@ -172,13 +172,6 @@ jobs:
           path: packaging/windows/artifacts/*
           if-no-files-found: error
 
-      - name: Upload media tools artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: CineWindows-windows-media-tools
-          path: packaging/windows/artifacts/*media-tools*
-          if-no-files-found: error
-
   publish-release:
     name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != '')
@@ -229,19 +222,16 @@ jobs:
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          & scripts/generate/update_changelog.ps1 -Version $env:RELEASE_VERSION -Check
-          Copy-Item "packaging/releases/$env:RELEASE_VERSION.md" RELEASE_NOTES.md
+          $notes = "packaging/releases/$env:RELEASE_VERSION.md"
+          if (-not (Test-Path -LiteralPath $notes)) {
+            throw "Release notes file not found: $notes"
+          }
+          Copy-Item -LiteralPath $notes -Destination RELEASE_NOTES.md
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
         with:
           name: CineWindows-windows
-          path: release-assets
-
-      - name: Download Windows media tools artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: CineWindows-windows-media-tools
           path: release-assets
 
       - name: Generate Windows checksum manifest

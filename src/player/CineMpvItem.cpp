@@ -204,9 +204,13 @@ void CineMpvItem::configureDefaults()
     setProperty(QStringLiteral("osd-bar"), false);
     setProperty(QStringLiteral("osd-margin-x"), 66);
     setProperty(QStringLiteral("osd-margin-y"), 66);
-    setProperty(QStringLiteral("gpu-api"), QStringLiteral("opengl"));
+    // GPU-accelerated rendering and hardware decoding.
+    setProperty(QStringLiteral("vo"), QStringLiteral("gpu-next"));
+    setProperty(QStringLiteral("gpu-api"), QStringLiteral("vulkan"));
 #ifdef Q_OS_WIN
-    setProperty(QStringLiteral("hwdec"), QStringLiteral("no"));
+    // NVIDIA NVDEC keeps video decoding on the GPU instead of the CPU.
+    setProperty(QStringLiteral("hwdec"), QStringLiteral("nvdec"));
+    setProperty(QStringLiteral("hwdec-codecs"), QStringLiteral("all"));
 #else
     setProperty(QStringLiteral("hwdec"), QStringLiteral("auto-safe"));
 #endif

@@ -180,7 +180,11 @@ void CineMpvItem::configureDefaults()
     setProperty(QStringLiteral("screenshot-directory"), PathUtils::screenshotsDir());
     setProperty(QStringLiteral("screenshot-template"), QStringLiteral("cine_%n"));
     setProperty(QStringLiteral("audio-file-auto"), QStringLiteral("fuzzy"));
-    // Increase the libmpv forward cache for streaming/remote playback to 10 GiB.\n    // mpv defaults to a much smaller demuxer cache (currently 150 MiB).\n    setProperty(QStringLiteral("cache"), QStringLiteral("yes"));\n    setProperty(QStringLiteral("demuxer-max-bytes"), QStringLiteral("10GiB"));\n    setProperty(QStringLiteral("sub-auto"), QStringLiteral("fuzzy"));
+    // Increase the libmpv forward cache for streaming/remote playback to 10 GiB.
+    // mpv defaults to a much smaller demuxer cache (currently 150 MiB).
+    setProperty(QStringLiteral("cache"), QStringLiteral("yes"));
+    setProperty(QStringLiteral("demuxer-max-bytes"), QStringLiteral("10GiB"));
+    setProperty(QStringLiteral("sub-auto"), QStringLiteral("fuzzy"));
     setProperty(QStringLiteral("sub-file-paths"),
                 QStringLiteral("sub:subs:subtitles:Sub:Subs:Subtitles:srt:srts:Srt:Srts"));
     setProperty(QStringLiteral("sub-border-size"), 2);

@@ -184,6 +184,11 @@ void CineMpvItem::configureDefaults()
     // mpv defaults to a much smaller demuxer cache (currently 150 MiB).
     setProperty(QStringLiteral("cache"), QStringLiteral("yes"));
     setProperty(QStringLiteral("demuxer-max-bytes"), QStringLiteral("10GiB"));
+    // Keep seeking available even for streams that mpv cannot normally classify as seekable.
+    // Use precise seeks by default and allow short seeks to be served from the demuxer cache.
+    setProperty(QStringLiteral("force-seekable"), QStringLiteral("yes"));
+    setProperty(QStringLiteral("hr-seek"), QStringLiteral("yes"));
+    setProperty(QStringLiteral("demuxer-seekable-cache"), QStringLiteral("yes"));
     setProperty(QStringLiteral("sub-auto"), QStringLiteral("fuzzy"));
     setProperty(QStringLiteral("sub-file-paths"),
                 QStringLiteral("sub:subs:subtitles:Sub:Subs:Subtitles:srt:srts:Srt:Srts"));
@@ -447,7 +452,7 @@ void CineMpvItem::setPosition(double value)
     {
         return;
     }
-    commandAsync(QStringList{QStringLiteral("seek"), QString::number(value, 'f', 3), QStringLiteral("absolute")});
+    commandAsync(QStringList{QStringLiteral("seek"), QString::number(value, 'f', 3), QStringLiteral("absolute+exact")});
 }
 
 void CineMpvItem::setPause(bool value)
@@ -549,7 +554,7 @@ void CineMpvItem::addAudio(const QString& path)
 
 void CineMpvItem::seekRelative(double seconds)
 {
-    commandAsync(QStringList{QStringLiteral("seek"), QString::number(seconds, 'f', 3), QStringLiteral("relative")});
+    commandAsync(QStringList{QStringLiteral("seek"), QString::number(seconds, 'f', 3), QStringLiteral("relative+exact")});
 }
 
 void CineMpvItem::setTrack(const QString& property, int trackId)

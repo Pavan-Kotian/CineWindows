@@ -179,217 +179,11 @@ jobs:
           path: packaging/windows/artifacts/*media-tools*
           if-no-files-found: error
 
-  linux-appimage:
-    name: Linux AppImage
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v7
-        with:
-          submodules: true
-
-      - name: Install system dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            libmpv-dev \
-            libgl1-mesa-dev \
-            libglu1-mesa-dev \
-            libxkbcommon-dev \
-            libxcb1-dev \
-            libdbus-1-dev \
-            libfuse2t64 \
-            pkg-config \
-            file
-
-      - name: Install ECM 6.15.0 (MpvQt dependency)
-        run: |
-          git clone --depth 1 --branch v6.15.0 \
-            https://invent.kde.org/frameworks/extra-cmake-modules.git /tmp/ecm
-          cmake -S /tmp/ecm -B /tmp/ecm/build -DCMAKE_INSTALL_PREFIX=/usr
-          sudo cmake --install /tmp/ecm/build
-
-      - name: Set up Python for aqtinstall compatibility
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: linux
-          target: desktop
-          cache: true
-          setup-python: false
-          modules: >-
-            qtshadertools
-            qt5compat
-            qtmultimedia
-            qtimageformats
-            qtquick3d
-            qtquicktimeline
-            qtlottie
-            qtwaylandcompositor
-
-      - name: Configure
-        run: cmake --preset release
-
-      - name: Build
-        run: cmake --build --preset release
-
-      - name: QML lint
-        run: cmake --build --preset release --target CineWindows_qmllint
-
-      - name: Release translations
-        run: cmake --build --preset release --target release_translations
-
-      - name: Remove unused Qt SQL drivers
-        run: |
-          sql_driver_dir="${QT_ROOT_DIR}/plugins/sqldrivers"
-          test -f "${sql_driver_dir}/libqsqlite.so"
-          find "${sql_driver_dir}" -maxdepth 1 -type f \
-            -name 'libqsql*.so' ! -name 'libqsqlite.so' -print -delete
-
-      - name: Package AppImage
-        env:
-          APPIMAGE_EXTRACT_AND_RUN: "1"
-        run: |
-          chmod +x scripts/package/deploy_linux.sh
-          bash scripts/package/deploy_linux.sh "build/release" "packaging/linux/artifacts"
-
-      - name: Generate checksums
-        run: |
-          cd packaging/linux/artifacts
-          sha256sum * > SHA256SUMS-linux.txt
-
-      - name: Upload workflow artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: CineWindows-linux
-          path: packaging/linux/artifacts/*
-          if-no-files-found: error
-
-  linux-flatpak:
-    name: Linux Flatpak
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.10
-      options: --privileged
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v7
-        with:
-          submodules: true
-
-      - name: Build Flatpak bundle
-        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        with:
-          bundle: CineWindows-x86_64.flatpak
-          manifest-path: packaging/flatpak/com.gyrolet.CineWindows.yml
-          upload-artifact: false
-
-      - name: Stage Flatpak artifacts
-        run: |
-          mkdir -p packaging/flatpak/artifacts
-          mv CineWindows-x86_64.flatpak packaging/flatpak/artifacts/
-          cd packaging/flatpak/artifacts
-          sha256sum CineWindows-x86_64.flatpak > SHA256SUMS-flatpak.txt
-
-      - name: Upload workflow artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: CineWindows-flatpak
-          path: packaging/flatpak/artifacts/*
-          if-no-files-found: error
-
-  macos-dmg:
-    name: macOS DMG (${{ matrix.arch }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-15
-            arch: arm64
-          - runner: macos-15-intel
-            arch: x86_64
-    runs-on: ${{ matrix.runner }}
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v7
-        with:
-          submodules: true
-
-      - name: Set up Python for aqtinstall compatibility
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          host: mac
-          target: desktop
-          arch: clang_64
-          cache: true
-          setup-python: false
-          modules: >-
-            qtshadertools
-            qt5compat
-            qtmultimedia
-            qtimageformats
-            qtquick3d
-            qtquicktimeline
-            qtlottie
-
-      - name: Install system dependencies
-        run: brew install extra-cmake-modules librsvg mpv ninja pkg-config create-dmg
-
-      - name: Generate application icon
-        run: bash scripts/generate/generate_icns.sh
-
-      - name: Configure
-        run: |
-          export PKG_CONFIG_PATH="$(brew --prefix mpv)/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-          cmake --preset release \
-            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR;$(brew --prefix mpv);$(brew --prefix extra-cmake-modules)" \
-            -DCINEWINDOWS_MACOS_ARCHITECTURES="${{ matrix.arch }}"
-
-      - name: Build
-        run: cmake --build --preset release
-
-      - name: QML lint
-        run: cmake --build --preset release --target CineWindows_qmllint
-
-      - name: Release translations
-        run: cmake --build --preset release --target release_translations
-
-      - name: Package and verify
-        run: bash scripts/package/deploy_macos.sh "build/release" "packaging/macos/artifacts" "${{ matrix.arch }}"
-
-      - name: Generate checksum
-        working-directory: packaging/macos/artifacts
-        run: shasum -a 256 *.dmg > "SHA256SUMS-${{ matrix.arch }}.txt"
-
-      - name: Upload workflow artifacts
-        uses: actions/upload-artifact@v7
-        with:
-          name: CineWindows-macos-${{ matrix.arch }}
-          path: packaging/macos/artifacts/*
-          if-no-files-found: error
-
   publish-release:
     name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != '')
     needs:
       - windows-installer
-      - linux-appimage
-      - linux-flatpak
-      - macos-dmg
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -427,17 +221,12 @@ jobs:
           echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
           echo "Publishing $tag from $GITHUB_SHA"
 
-      - name: Verify changelog and release metadata
+      - name: Generate release notes
         shell: pwsh
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          $metadata = [xml](Get-Content -Raw packaging/linux/com.gyrolet.CineWindows.metainfo.xml)
-          $release = @($metadata.component.releases.release)[0]
-          if ($release.version -ne $env:RELEASE_VERSION) {
-            throw "Linux release metadata does not match $env:RELEASE_VERSION."
-          }
-          & scripts/generate/update_changelog.ps1 -Version $env:RELEASE_VERSION -Date $release.date -Check
+          & scripts/generate/update_changelog.ps1 -Version $env:RELEASE_VERSION -Check
           Copy-Item "packaging/releases/$env:RELEASE_VERSION.md" RELEASE_NOTES.md
 
       - name: Download Windows artifacts
@@ -446,31 +235,13 @@ jobs:
           name: CineWindows-windows
           path: release-assets
 
-      - name: Download Linux artifacts
+      - name: Download Windows media tools artifact
         uses: actions/download-artifact@v4
         with:
-          name: CineWindows-linux
+          name: CineWindows-windows-media-tools
           path: release-assets
 
-      - name: Download Flatpak artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: CineWindows-flatpak
-          path: release-assets
-
-      - name: Download macOS arm64 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: CineWindows-macos-arm64
-          path: release-assets
-
-      - name: Download macOS x86_64 artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: CineWindows-macos-x86_64
-          path: release-assets
-
-      - name: Generate combined checksum manifest
+      - name: Generate Windows checksum manifest
         shell: bash
         run: |
           cd release-assets
@@ -479,7 +250,7 @@ jobs:
             | xargs -0 sha256sum > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
-      - name: Verify release assets
+      - name: Verify Windows release assets
         shell: bash
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
@@ -488,15 +259,11 @@ jobs:
             "CineWindows-${RELEASE_VERSION}-win64-portable.zip"
             "CineWindows-${RELEASE_VERSION}-win64-media-tools.zip"
             "CineWindows-${RELEASE_VERSION}-win64-setup.exe"
-            "CineWindows-x86_64.AppImage"
-            "CineWindows-x86_64.flatpak"
-            "CineWindows-arm64.dmg"
-            "CineWindows-x86_64.dmg"
             "SHA256SUMS.txt"
           )
           for asset in "${required[@]}"; do
             if [[ ! -s "release-assets/$asset" ]]; then
-              echo "ERROR: required release asset is missing or empty: $asset"
+              echo "ERROR: required Windows release asset is missing or empty: $asset"
               exit 1
             fi
           done

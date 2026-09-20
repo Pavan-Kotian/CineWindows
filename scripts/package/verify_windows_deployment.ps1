@@ -95,7 +95,6 @@ if (-not (Test-Path -LiteralPath $appPath -PathType Leaf)) {
     throw "Deployment is missing CineWindows.exe."
 }
 
-$versionProcess = $null
 $startupProcess = $null
 $hadStandardPathsMode = Test-Path Env:QT_STANDARDPATHS_TEST_MODE
 $previousStandardPathsMode = $env:QT_STANDARDPATHS_TEST_MODE
@@ -105,34 +104,21 @@ $env:QT_STANDARDPATHS_TEST_MODE = "1"
 $env:QML_DISABLE_DISK_CACHE = "1"
 
 try {
-    $versionStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
-    $versionStartInfo.FileName = $appPath
-    $versionStartInfo.Arguments = "--version"
-    $versionStartInfo.WorkingDirectory = $stagePath
-    $versionStartInfo.UseShellExecute = $false
-    $versionStartInfo.CreateNoWindow = $true
-    $versionStartInfo.RedirectStandardOutput = $true
-    $versionStartInfo.RedirectStandardError = $true
-    $versionProcess = [System.Diagnostics.Process]::new()
-    $versionProcess.StartInfo = $versionStartInfo
-    if (-not $versionProcess.Start()) {
-        throw "Packaged CineWindows.exe --version could not be started."
+    # Do not launch the GUI executable for the version check. Windows GUI
+    # processes can remain attached to inherited console/pipe handles even
+    # when --version returns immediately, which makes CI process waits
+    # unreliable. The PE version resource is already embedded in the binary.
+    $versionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($appPath)
+    $fileVersion = $versionInfo.FileVersion
+    $productVersion = $versionInfo.ProductVersion
+    if ([string]::IsNullOrWhiteSpace($fileVersion)) {
+        throw "Packaged CineWindows.exe does not contain a file version resource."
     }
-    $versionStdoutTask = $versionProcess.StandardOutput.ReadToEndAsync()
-    $versionStderrTask = $versionProcess.StandardError.ReadToEndAsync()
-    if (-not $versionProcess.WaitForExit($StartupTimeoutSeconds * 1000)) {
-        throw "Packaged CineWindows.exe --version did not exit within $StartupTimeoutSeconds seconds."
+    Write-Host "Packaged CineWindows.exe version: $fileVersion"
+    if ($productVersion) {
+        Write-Host "Packaged CineWindows.exe product version: $productVersion"
     }
-    $versionProcess.WaitForExit()
-    $versionStdoutText = $versionStdoutTask.GetAwaiter().GetResult().Trim()
-    $versionStderrText = $versionStderrTask.GetAwaiter().GetResult().Trim()
-    if ($versionProcess.ExitCode -ne 0) {
-        $details = if ($versionStderrText) { "`n$versionStderrText" } else { "" }
-        throw "Packaged CineWindows.exe --version failed with exit code $($versionProcess.ExitCode).$details"
-    }
-    if ($versionStdoutText) {
-        Write-Host $versionStdoutText
-    }
+
 
     if (-not $SkipGuiStartupCheck) {
         $startupStartInfo = [System.Diagnostics.ProcessStartInfo]::new()
@@ -163,7 +149,7 @@ try {
         Write-Host "Skipped packaged GUI startup check for headless environment."
     }
 } finally {
-    foreach ($process in @($startupProcess, $versionProcess)) {
+    foreach ($process in @($startupProcess)) {
         if ($process -and -not $process.HasExited) {
             Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
             Wait-Process -Id $process.Id -ErrorAction SilentlyContinue
